@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="BetCalc">
+<meta name="theme-color" content="#0a0a0f">
+<title>BetCalc</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #13131a;
+    --surface2: #1c1c27;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.13);
+    --text: #e8e8f0;
+    --muted: #6b6b80;
+    --accent: #c8f04e;
+    --accent-dim: rgba(200,240,78,0.12);
+    --accent-dim2: rgba(200,240,78,0.22);
+    --red: #ff5a5a;
+    --red-dim: rgba(255,90,90,0.12);
+    --green: #4effa0;
+    --green-dim: rgba(78,255,160,0.12);
+    --blue: #5ab4ff;
+    --blue-dim: rgba(90,180,255,0.12);
+    --radius: 14px;
+    --radius-sm: 8px;
+    --font: 'Syne', sans-serif;
+    --mono: 'JetBrains Mono', monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--font); overflow: hidden; }
+
+  .app { display: flex; flex-direction: column; height: 100dvh; max-width: 430px; margin: 0 auto; }
+
+  /* Header */
+  .header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 52px 20px 16px;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .header-title { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
+  .header-title span { color: var(--accent); }
+  .header-tag {
+    font-size: 11px; font-family: var(--mono); color: var(--muted);
+    background: var(--surface); border: 1px solid var(--border);
+    padding: 4px 10px; border-radius: 99px;
+  }
+
+  /* Tab nav */
+  .tabnav {
+    display: flex; gap: 4px; padding: 10px 20px;
+    background: var(--bg); flex-shrink: 0;
+  }
+  .tab {
+    flex: 1; padding: 8px 4px; font-family: var(--font); font-size: 13px; font-weight: 600;
+    text-align: center; border: 1px solid var(--border); border-radius: var(--radius-sm);
+    background: transparent; color: var(--muted); cursor: pointer; transition: all 0.18s;
+  }
+  .tab.active { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
+
+  /* Scrollable content */
+  .content { flex: 1; overflow-y: auto; padding: 0 20px 100px; -webkit-overflow-scrolling: touch; }
+  .page { display: none; padding-top: 12px; }
+  .page.active { display: block; }
+
+  /* Cards */
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 16px; margin-bottom: 12px;
+  }
+  .card-title {
+    font-size: 10px; font-family: var(--mono); font-weight: 600;
+    letter-spacing: 0.1em; color: var(--muted); text-transform: uppercase; margin-bottom: 14px;
+  }
+
+  /* Inputs */
+  .field { margin-bottom: 12px; }
+  .field label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 6px; font-family: var(--mono); }
+  .field-row { display: flex; align-items: center; gap: 8px; }
+  .field input {
+    flex: 1; background: var(--surface2); border: 1px solid var(--border2);
+    border-radius: var(--radius-sm); padding: 12px 14px;
+    color: var(--text); font-size: 18px; font-family: var(--mono); font-weight: 600;
+    outline: none; width: 100%;
+    -webkit-appearance: none;
+  }
+  .field input:focus { border-color: var(--accent); background: rgba(200,240,78,0.05); }
+  .field .unit {
+    font-size: 12px; font-family: var(--mono); color: var(--muted);
+    background: var(--surface2); border: 1px solid var(--border);
+    padding: 12px 10px; border-radius: var(--radius-sm); white-space: nowrap;
+  }
+
+  /* Buttons */
+  .btn {
+    width: 100%; padding: 14px; border-radius: var(--radius);
+    font-family: var(--font); font-size: 15px; font-weight: 700;
+    border: none; cursor: pointer; transition: all 0.15s; letter-spacing: 0.02em;
+  }
+  .btn-primary { background: var(--accent); color: #0a0a0f; }
+  .btn-primary:active { transform: scale(0.97); background: #b8e040; }
+  .btn-ghost { background: var(--surface2); color: var(--muted); border: 1px solid var(--border); }
+  .btn-ghost:active { transform: scale(0.97); }
+  .btn-win { background: var(--green-dim); color: var(--green); border: 1px solid rgba(78,255,160,0.3); font-size: 18px; }
+  .btn-win:active { transform: scale(0.96); background: rgba(78,255,160,0.22); }
+  .btn-loss { background: var(--red-dim); color: var(--red); border: 1px solid rgba(255,90,90,0.3); font-size: 18px; }
+  .btn-loss:active { transform: scale(0.96); background: rgba(255,90,90,0.22); }
+  .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px; }
+
+  /* Stats grid */
+  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+  .stat-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 12px;
+  }
+  .stat-label { font-size: 10px; font-family: var(--mono); color: var(--muted); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.06em; }
+  .stat-val { font-size: 17px; font-weight: 800; font-family: var(--mono); color: var(--text); }
+  .stat-val.pos { color: var(--green); }
+  .stat-val.neg { color: var(--red); }
+
+  /* Next bet box */
+  .next-bet {
+    background: var(--accent-dim); border: 1px solid var(--accent);
+    border-radius: var(--radius); padding: 18px 16px; margin-bottom: 12px;
+    animation: pulse-border 2s ease-in-out infinite;
+  }
+  @keyframes pulse-border {
+    0%, 100% { border-color: var(--accent); }
+    50% { border-color: rgba(200,240,78,0.4); }
+  }
+  .next-label { font-size: 10px; font-family: var(--mono); color: var(--accent); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 6px; }
+  .next-amount { font-size: 42px; font-weight: 800; font-family: var(--mono); color: var(--accent); line-height: 1; margin-bottom: 6px; }
+  .next-sub { font-size: 11px; font-family: var(--mono); color: rgba(200,240,78,0.6); }
+
+  /* History */
+  .round-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 11px 14px; border-radius: var(--radius-sm);
+    margin-bottom: 6px; border: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .round-row.win { border-color: rgba(78,255,160,0.2); background: rgba(78,255,160,0.05); }
+  .round-row.loss { border-color: rgba(255,90,90,0.2); background: rgba(255,90,90,0.05); }
+  .round-n { font-size: 11px; font-family: var(--mono); color: var(--muted); min-width: 26px; }
+  .round-ulog { font-size: 14px; font-weight: 600; font-family: var(--mono); flex: 1; padding: 0 8px; }
+  .round-res { font-size: 12px; font-family: var(--mono); }
+  .round-res.win { color: var(--green); }
+  .round-res.loss { color: var(--red); }
+  .round-banka { font-size: 12px; font-family: var(--mono); color: var(--muted); text-align: right; min-width: 70px; }
+
+  /* Empty state */
+  .empty { text-align: center; padding: 48px 20px; color: var(--muted); font-family: var(--mono); font-size: 13px; }
+  .empty-icon { font-size: 40px; margin-bottom: 12px; }
+
+  /* Session not started */
+  .no-session { text-align: center; padding: 60px 20px; }
+  .no-session .icon { font-size: 48px; margin-bottom: 16px; }
+  .no-session p { color: var(--muted); font-size: 14px; line-height: 1.6; }
+
+  /* Toast */
+  .toast {
+    position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%) translateY(20px);
+    background: var(--surface2); border: 1px solid var(--border2);
+    border-radius: 99px; padding: 10px 20px;
+    font-size: 13px; font-family: var(--mono); color: var(--text);
+    opacity: 0; transition: all 0.25s; pointer-events: none; z-index: 100; white-space: nowrap;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* Separator */
+  .sep { height: 1px; background: var(--border); margin: 14px 0; }
+
+  /* Undo btn */
+  .undo-btn {
+    width: 100%; padding: 10px; font-size: 13px; font-family: var(--mono);
+    background: transparent; border: 1px dashed var(--border2);
+    border-radius: var(--radius-sm); color: var(--muted); cursor: pointer; margin-top: 6px;
+    transition: all 0.15s;
+  }
+  .undo-btn:active { color: var(--text); border-color: var(--border2); background: var(--surface2); }
+
+  /* Scrollbar */
+  .content::-webkit-scrollbar { width: 0; }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <div class="header-title">Bet<span>Calc</span></div>
+    <div class="header-tag" id="session-tag">nema sesije</div>
+  </div>
+
+  <div class="tabnav">
+    <button class="tab active" onclick="showTab('setup')">Postavke</button>
+    <button class="tab" onclick="showTab('play')">Igra</button>
+    <button class="tab" onclick="showTab('history')">Istorija</button>
+  </div>
+
+  <div class="content">
+
+    <!-- SETUP TAB -->
+    <div class="page active" id="tab-setup">
+      <div class="card">
+        <div class="card-title">Banka & ulog</div>
+        <div class="field">
+          <label>Početna banka (RSD)</label>
+          <div class="field-row">
+            <input type="number" id="f-banka" value="1000" min="1" inputmode="decimal">
+          </div>
+        </div>
+        <div class="field">
+          <label>Početni ulog (RSD)</label>
+          <div class="field-row">
+            <input type="number" id="f-ulog" value="100" min="1" inputmode="decimal">
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Kvota & cilj</div>
+        <div class="field">
+          <label>Kvota</label>
+          <div class="field-row">
+            <input type="number" id="f-kvota" value="2.00" min="1.05" step="0.05" inputmode="decimal">
+            <span class="unit">×</span>
+          </div>
+        </div>
+        <div class="field">
+          <label>Ciljni profit (RSD)</label>
+          <div class="field-row">
+            <input type="number" id="f-cilj" value="200" min="1" inputmode="decimal">
+          </div>
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="startSession()">Pokreni sesiju →</button>
+      <div style="height:8px"></div>
+      <button class="btn btn-ghost" onclick="resetAll()">Resetuj sve</button>
+    </div>
+
+    <!-- PLAY TAB -->
+    <div class="page" id="tab-play">
+      <div id="no-session-msg" class="no-session">
+        <div class="icon">🎯</div>
+        <p>Nema aktivne sesije.<br>Idi na <strong>Postavke</strong> i pokreni sesiju.</p>
+      </div>
+      <div id="play-content" style="display:none">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-label">Banka</div>
+            <div class="stat-val" id="s-banka">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Net P&L</div>
+            <div class="stat-val" id="s-pnl">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Pobede</div>
+            <div class="stat-val pos" id="s-wins">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Porazi</div>
+            <div class="stat-val neg" id="s-losses">0</div>
+          </div>
+        </div>
+
+        <div class="next-bet">
+          <div class="next-label">▶ sledeći ulog</div>
+          <div class="next-amount" id="next-amount">—</div>
+          <div class="next-sub" id="next-sub">—</div>
+        </div>
+
+        <div class="btn-row">
+          <button class="btn btn-win" onclick="recordResult('win')">✓ Pobeda</button>
+          <button class="btn btn-loss" onclick="recordResult('loss')">✗ Poraz</button>
+        </div>
+        <button class="undo-btn" onclick="undoLast()">↩ poništi poslednji unos</button>
+
+        <div class="sep"></div>
+        <div class="card" style="margin-bottom:0">
+          <div class="card-title">Parametri sesije</div>
+          <div style="display:flex; justify-content:space-between; font-size:13px; font-family:var(--mono); color:var(--muted); margin-bottom:6px">
+            <span>Kvota</span><span style="color:var(--text)" id="p-kvota">—</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; font-size:13px; font-family:var(--mono); color:var(--muted); margin-bottom:6px">
+            <span>Početna banka</span><span style="color:var(--text)" id="p-banka">—</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; font-size:13px; font-family:var(--mono); color:var(--muted)">
+            <span>Cilj profita</span><span style="color:var(--accent)" id="p-cilj">—</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HISTORY TAB -->
+    <div class="page" id="tab-history">
+      <div id="history-empty" class="empty">
+        <div class="empty-icon">📋</div>
+        Još nema odigranih rundi.
+      </div>
+      <div id="history-list"></div>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let state = null;
+const SAVE_KEY = 'betcalc_state';
+
+function save() {
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify(state)); } catch(e) {}
+}
+
+function load() {
+  try {
+    const s = localStorage.getItem(SAVE_KEY);
+    if (s) state = JSON.parse(s);
+  } catch(e) {}
+}
+
+function fmt(n) { return Math.round(n).toLocaleString('sr-RS'); }
+function fmtDec(n) { return parseFloat(n.toFixed(2)).toLocaleString('sr-RS', {minimumFractionDigits: 2}); }
+
+function calcNextUlog(s) {
+  if (s.akumGubitak <= 0) return s.pocetniUlog;
+  const needed = s.akumGubitak + s.cilj;
+  return Math.ceil(needed / (s.kvota - 1));
+}
+
+function startSession() {
+  const banka = parseFloat(document.getElementById('f-banka').value);
+  const ulog = parseFloat(document.getElementById('f-ulog').value);
+  const kvota = parseFloat(document.getElementById('f-kvota').value);
+  const cilj = parseFloat(document.getElementById('f-cilj').value);
+  if (!banka || !ulog || !kvota || kvota <= 1 || !cilj) {
+    toast('Proveri unete vrednosti!'); return;
+  }
+  state = {
+    pocetnaBanka: banka, banka, pocetniUlog: ulog,
+    kvota, cilj, rounds: [], wins: 0, losses: 0,
+    akumGubitak: 0, nextUlog: ulog, started: Date.now()
+  };
+  save();
+  toast('Sesija pokrenuta!');
+  render();
+  showTab('play');
+}
+
+function recordResult(tip) {
+  if (!state) return;
+  const ulog = state.nextUlog;
+  const snap = JSON.stringify(state);
+
+  if (tip === 'win') {
+    const dobit = ulog * state.kvota;
+    const net = dobit - ulog;
+    state.banka = parseFloat((state.banka - ulog + dobit).toFixed(2));
+    state.akumGubitak = 0;
+    state.wins++;
+    state.nextUlog = state.pocetniUlog;
+    state.rounds.push({ n: state.rounds.length + 1, ulog, tip: 'win', banka: state.banka, net: parseFloat(net.toFixed(2)) });
+    toast(`+${fmt(net)} RSD 🎉`);
+  } else {
+    state.banka = parseFloat((state.banka - ulog).toFixed(2));
+    state.akumGubitak = parseFloat((state.akumGubitak + ulog).toFixed(2));
+    state.losses++;
+    state.rounds.push({ n: state.rounds.length + 1, ulog, tip: 'loss', banka: state.banka, net: -ulog });
+    state.nextUlog = calcNextUlog(state);
+    toast(`−${fmt(ulog)} RSD`);
+  }
+
+  state._lastSnap = snap;
+  save();
+  render();
+}
+
+function undoLast() {
+  if (!state || !state._lastSnap) { toast('Nema šta da se poništi'); return; }
+  state = JSON.parse(state._lastSnap);
+  state._lastSnap = null;
+  save();
+  render();
+  toast('Poslednji unos poništen');
+}
+
+function resetAll() {
+  if (state && state.rounds && state.rounds.length > 0) {
+    if (!confirm('Obrisati trenutnu sesiju?')) return;
+  }
+  state = null;
+  try { localStorage.removeItem(SAVE_KEY); } catch(e) {}
+  render();
+  toast('Resetovano');
+  showTab('setup');
+}
+
+function render() {
+  const hasSession = !!state;
+  document.getElementById('session-tag').textContent = hasSession ? `runda ${state.rounds.length}` : 'nema sesije';
+
+  document.getElementById('no-session-msg').style.display = hasSession ? 'none' : '';
+  document.getElementById('play-content').style.display = hasSession ? '' : 'none';
+
+  if (!hasSession) { renderHistory(); return; }
+
+  const pnl = state.banka - state.pocetnaBanka;
+  document.getElementById('s-banka').textContent = fmt(state.banka) + ' RSD';
+  const pnlEl = document.getElementById('s-pnl');
+  pnlEl.textContent = (pnl >= 0 ? '+' : '') + fmt(pnl) + ' RSD';
+  pnlEl.className = 'stat-val ' + (pnl >= 0 ? 'pos' : 'neg');
+  document.getElementById('s-wins').textContent = state.wins;
+  document.getElementById('s-losses').textContent = state.losses;
+
+  document.getElementById('next-amount').textContent = fmt(state.nextUlog) + ' RSD';
+  if (state.akumGubitak > 0) {
+    document.getElementById('next-sub').textContent =
+      `pokriva ${fmt(state.akumGubitak)} RSD gubitka + ${fmt(state.cilj)} RSD cilj`;
+  } else {
+    document.getElementById('next-sub').textContent = 'početni ulog — nema akumuliranog gubitka';
+  }
+
+  document.getElementById('p-kvota').textContent = fmtDec(state.kvota) + '×';
+  document.getElementById('p-banka').textContent = fmt(state.pocetnaBanka) + ' RSD';
+  document.getElementById('p-cilj').textContent = fmt(state.cilj) + ' RSD';
+
+  renderHistory();
+}
+
+function renderHistory() {
+  const list = document.getElementById('history-list');
+  const empty = document.getElementById('history-empty');
+  if (!state || state.rounds.length === 0) {
+    list.innerHTML = ''; empty.style.display = ''; return;
+  }
+  empty.style.display = 'none';
+  list.innerHTML = '';
+  const reversed = [...state.rounds].reverse();
+  reversed.forEach(r => {
+    const div = document.createElement('div');
+    div.className = 'round-row ' + r.tip;
+    div.innerHTML = `
+      <span class="round-n">#${r.n}</span>
+      <span class="round-ulog">${fmt(r.ulog)} RSD</span>
+      <span class="round-res ${r.tip}">${r.tip === 'win' ? '✓ +' + fmt(r.net) : '✗ −' + fmt(Math.abs(r.net))} RSD</span>
+      <span class="round-banka">${fmt(r.banka)} RSD</span>
+    `;
+    list.appendChild(div);
+  });
+}
+
+function showTab(id) {
+  document.querySelectorAll('.tab').forEach((t, i) => {
+    const ids = ['setup', 'play', 'history'];
+    t.classList.toggle('active', ids[i] === id);
+  });
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+}
+
+let toastTimer;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
+}
+
+// Init
+load();
+render();
+
+// Service Worker
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js').catch(() => {});
+}
+</script>
+</body>
+</html>
