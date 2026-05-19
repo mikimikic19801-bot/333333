@@ -114,8 +114,19 @@
       const [error, setError] = useState(null);
       const [h2hData, setH2hData] = useState(null);
       const [sources, setSources] = useState([]);
-      const [customApiKey, setCustomApiKey] = useState("");
-      const [showApiSettings, setShowApiSettings] = useState(false);
+      
+      // Input state for key in the settings panel
+      const [inputApiKey, setInputApiKey] = useState(() => {
+        return localStorage.getItem("h2h_gemini_api_key") || "";
+      });
+      
+      // Verified active key state
+      const [activeApiKey, setActiveApiKey] = useState(() => {
+        return localStorage.getItem("h2h_gemini_api_key") || "";
+      });
+
+      const [saveStatus, setSaveStatus] = useState("");
+      const [showApiSettings, setShowApiSettings] = useState(!activeApiKey); 
 
       useEffect(() => {
         let interval;
@@ -128,6 +139,28 @@
         }
         return () => clearInterval(interval);
       }, [loading]);
+
+      const handleSaveKey = () => {
+        const trimmed = inputApiKey.trim();
+        localStorage.setItem("h2h_gemini_api_key", trimmed);
+        setActiveApiKey(trimmed);
+        setSaveStatus(language === "SRB" ? "Ključ je uspešno sačuvan! ✔️" : "Key successfully saved! ✔️");
+        
+        setTimeout(() => {
+          setSaveStatus("");
+          if (trimmed) {
+            setShowApiSettings(false); // Hide automatically after success
+          }
+        }, 2000);
+      };
+
+      const handleRemoveKey = () => {
+        localStorage.removeItem("h2h_gemini_api_key");
+        setInputApiKey("");
+        setActiveApiKey("");
+        setSaveStatus(language === "SRB" ? "Ključ je uklonjen!" : "Key removed!");
+        setTimeout(() => setSaveStatus(""), 2000);
+      };
 
       const loadingMessages = {
         SRB: [
@@ -147,6 +180,16 @@
       const fetchH2HAnalysis = async (tA = teamA, tB = teamB) => {
         if (!tA.trim() || !tB.trim()) {
           setError(language === "SRB" ? "Molimo unesite oba tima." : "Please enter both teams.");
+          return;
+        }
+
+        if (!activeApiKey) {
+          setError(
+            language === "SRB" 
+              ? "Molimo unesite i sačuvajte vaš besplatni Gemini API ključ u podešavanjima na vrhu stranice kako biste pokrenuli pretragu." 
+              : "Please enter and save your free Gemini API key in the settings panel at the top of the page to search."
+          );
+          setShowApiSettings(true);
           return;
         }
 
@@ -180,9 +223,7 @@
           : "Please perform the analysis in English.";
         
         const userQuery = `Search for H2H soccer/football statistics between team "${tA}" and team "${tB}". ${langInstructions}`;
-        
-        const activeApiKey = customApiKey || "";
-        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${activeApiKey}`;
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${activeApiKey}`;
 
         const payload = {
           contents: [{ parts: [{ text: userQuery }] }],
@@ -234,8 +275,8 @@
           console.error(err);
           setError(
             language === "SRB" 
-              ? "Došlo je do greške prilikom pretrage. Proverite nazive timova ili proverite svoj API ključ." 
-              : "An error occurred during search. Please verify team names or check your API key."
+              ? "Greška! Proverite da li je vaš API ključ ispravan, ili pokušajte ponovo." 
+              : "Error! Please make sure your API key is correct, or try again."
           );
         } finally {
           setLoading(false);
@@ -277,7 +318,7 @@
 
               <button
                 onClick={() => setShowApiSettings(!showApiSettings)}
-                className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-900 border border-slate-800 hover:border-slate-700 transition-colors"
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${showApiSettings ? 'bg-emerald-500 text-slate-950 border-emerald-400' : 'bg-slate-900 border-slate-800 hover:border-slate-700'}`}
               >
                 ⚙️ {language === "SRB" ? "API Podešavanja" : "API Settings"}
               </button>
@@ -286,24 +327,61 @@
 
           {/* API ACCORDION */}
           {showApiSettings && (
-            <div className="max-w-4xl mx-auto mb-8 p-4 bg-slate-900 rounded-xl border border-slate-800 text-sm">
-              <h3 className="font-bold mb-2 text-emerald-400">
-                {language === "SRB" ? "Konfiguracija Gemini API ključa" : "Gemini API Key Configuration"}
-              </h3>
-              <p className="text-xs text-slate-400 mb-4">
-                {language === "SRB" 
-                  ? "Unesite svoj besplatni Gemini API ključ sa Google AI Studio-a kako biste pokrenuli analitiku."
-                  : "Please enter your free Gemini API key from Google AI Studio to run analytics."}
-              </p>
-              <div className="flex gap-2">
-                <input 
-                  type="password"
-                  placeholder="AIzaSy..."
-                  value={customApiKey}
-                  onChange={(e) => setCustomApiKey(e.target.value)}
-                  className="flex-1 bg-slate-950 text-slate-100 border border-slate-800 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-emerald-500"
-                />
+            <div className="max-w-6xl mx-auto mb-8 p-5 bg-slate-900 rounded-xl border border-slate-800 text-sm transition-all duration-300">
+              <div className="flex justify-between items-start mb-2">
+                <h3 className="font-bold text-emerald-400">
+                  {language === "SRB" ? "Podešavanje Gemini API ključa" : "Gemini API Key Setup"}
+                </h3>
+                <span className="text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded font-mono">
+                  Lokalna memorija
+                </span>
               </div>
+              <p className="text-xs text-slate-400 mb-4 leading-relaxed">
+                {language === "SRB" 
+                  ? "Za pokretanje pretrage potreban ti je sopstveni besplatni API ključ. Možeš ga kreirati za 1 minut na sajtu "
+                  : "To run live searches, you need a personal API key. You can create one for free in 1 minute at "}
+                <a href="[https://aistudio.google.com/](https://aistudio.google.com/)" target="_blank" rel="noreferrer" className="text-emerald-400 underline font-semibold hover:text-emerald-300">
+                  Google AI Studio
+                </a>.
+              </p>
+              
+              <div className="flex flex-col sm:flex-row gap-3 items-center">
+                <div className="relative flex-1 w-full">
+                  <input 
+                    type="password"
+                    placeholder="Nalepi svoj AIzaSy... ključ ovde"
+                    value={inputApiKey}
+                    onChange={(e) => setInputApiKey(e.target.value)}
+                    className="w-full bg-slate-950 text-slate-100 border border-slate-800 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-emerald-500 font-mono"
+                  />
+                  {activeApiKey && (
+                    <span className="absolute right-3 top-2.5 text-xs text-emerald-400 font-bold">✓ Sačuvan</span>
+                  )}
+                </div>
+
+                <div className="flex gap-2 w-full sm:w-auto">
+                  <button 
+                    onClick={handleSaveKey}
+                    className="flex-1 sm:flex-initial px-4 py-2 bg-emerald-500 text-slate-950 hover:bg-emerald-400 rounded-lg text-xs font-bold transition-all whitespace-nowrap"
+                  >
+                    {language === "SRB" ? "Sačuvaj ključ" : "Save Key"}
+                  </button>
+                  {activeApiKey && (
+                    <button 
+                      onClick={handleRemoveKey}
+                      className="px-4 py-2 bg-rose-950/60 text-rose-300 border border-rose-900 hover:bg-rose-900 rounded-lg text-xs font-bold transition-all"
+                    >
+                      {language === "SRB" ? "Ukloni" : "Remove"}
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {saveStatus && (
+                <div className="mt-3 text-xs font-bold text-emerald-400 animate-pulse">
+                  {saveStatus}
+                </div>
+              )}
             </div>
           )}
 
@@ -420,8 +498,8 @@
                   </h3>
                   <p className="text-xs text-slate-500 max-w-sm">
                     {language === "SRB" 
-                      ? "Unesite timove sa leve strane ili kliknite na neki od ponuđenih derbija kako bismo uradili pretragu uživo."
-                      : "Enter teams or select a popular derby to gather direct statistics."}
+                      ? "Sačuvajte API ključ gore, unesite timove sa leve strane ili izaberite derbi za instant pretragu."
+                      : "Save your API key above, then enter teams or select a popular derby."}
                   </p>
                 </div>
               )}
