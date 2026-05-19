@@ -1,489 +1,556 @@
 <!DOCTYPE html>
 <html lang="sr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="BetCalc">
-<meta name="theme-color" content="#0a0a0f">
-<title>BetCalc</title>
-<link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="icon.svg">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
-<style>
-  :root {
-    --bg: #0a0a0f;
-    --surface: #13131a;
-    --surface2: #1c1c27;
-    --border: rgba(255,255,255,0.07);
-    --border2: rgba(255,255,255,0.13);
-    --text: #e8e8f0;
-    --muted: #6b6b80;
-    --accent: #c8f04e;
-    --accent-dim: rgba(200,240,78,0.12);
-    --accent-dim2: rgba(200,240,78,0.22);
-    --red: #ff5a5a;
-    --red-dim: rgba(255,90,90,0.12);
-    --green: #4effa0;
-    --green-dim: rgba(78,255,160,0.12);
-    --blue: #5ab4ff;
-    --blue-dim: rgba(90,180,255,0.12);
-    --radius: 14px;
-    --radius-sm: 8px;
-    --font: 'Syne', sans-serif;
-    --mono: 'JetBrains Mono', monospace;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-  html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--font); overflow: hidden; }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>H2H Football Tradition Analyzer</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- React and ReactDOM CDNs -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  
+  <!-- Babel CDN (For compiling JSX in the browser) -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-  .app { display: flex; flex-direction: column; height: 100dvh; max-width: 430px; margin: 0 auto; }
-
-  /* Header */
-  .header {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 52px 20px 16px;
-    background: var(--bg);
-    border-bottom: 1px solid var(--border);
-    flex-shrink: 0;
-  }
-  .header-title { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
-  .header-title span { color: var(--accent); }
-  .header-tag {
-    font-size: 11px; font-family: var(--mono); color: var(--muted);
-    background: var(--surface); border: 1px solid var(--border);
-    padding: 4px 10px; border-radius: 99px;
-  }
-
-  /* Tab nav */
-  .tabnav {
-    display: flex; gap: 4px; padding: 10px 20px;
-    background: var(--bg); flex-shrink: 0;
-  }
-  .tab {
-    flex: 1; padding: 8px 4px; font-family: var(--font); font-size: 13px; font-weight: 600;
-    text-align: center; border: 1px solid var(--border); border-radius: var(--radius-sm);
-    background: transparent; color: var(--muted); cursor: pointer; transition: all 0.18s;
-  }
-  .tab.active { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
-
-  /* Scrollable content */
-  .content { flex: 1; overflow-y: auto; padding: 0 20px 100px; -webkit-overflow-scrolling: touch; }
-  .page { display: none; padding-top: 12px; }
-  .page.active { display: block; }
-
-  /* Cards */
-  .card {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: var(--radius); padding: 16px; margin-bottom: 12px;
-  }
-  .card-title {
-    font-size: 10px; font-family: var(--mono); font-weight: 600;
-    letter-spacing: 0.1em; color: var(--muted); text-transform: uppercase; margin-bottom: 14px;
-  }
-
-  /* Inputs */
-  .field { margin-bottom: 12px; }
-  .field label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 6px; font-family: var(--mono); }
-  .field-row { display: flex; align-items: center; gap: 8px; }
-  .field input {
-    flex: 1; background: var(--surface2); border: 1px solid var(--border2);
-    border-radius: var(--radius-sm); padding: 12px 14px;
-    color: var(--text); font-size: 18px; font-family: var(--mono); font-weight: 600;
-    outline: none; width: 100%;
-    -webkit-appearance: none;
-  }
-  .field input:focus { border-color: var(--accent); background: rgba(200,240,78,0.05); }
-  .field .unit {
-    font-size: 12px; font-family: var(--mono); color: var(--muted);
-    background: var(--surface2); border: 1px solid var(--border);
-    padding: 12px 10px; border-radius: var(--radius-sm); white-space: nowrap;
-  }
-
-  /* Buttons */
-  .btn {
-    width: 100%; padding: 14px; border-radius: var(--radius);
-    font-family: var(--font); font-size: 15px; font-weight: 700;
-    border: none; cursor: pointer; transition: all 0.15s; letter-spacing: 0.02em;
-  }
-  .btn-primary { background: var(--accent); color: #0a0a0f; }
-  .btn-primary:active { transform: scale(0.97); background: #b8e040; }
-  .btn-ghost { background: var(--surface2); color: var(--muted); border: 1px solid var(--border); }
-  .btn-ghost:active { transform: scale(0.97); }
-  .btn-win { background: var(--green-dim); color: var(--green); border: 1px solid rgba(78,255,160,0.3); font-size: 18px; }
-  .btn-win:active { transform: scale(0.96); background: rgba(78,255,160,0.22); }
-  .btn-loss { background: var(--red-dim); color: var(--red); border: 1px solid rgba(255,90,90,0.3); font-size: 18px; }
-  .btn-loss:active { transform: scale(0.96); background: rgba(255,90,90,0.22); }
-  .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px; }
-
-  /* Stats grid */
-  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
-  .stat-card {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: var(--radius-sm); padding: 12px;
-  }
-  .stat-label { font-size: 10px; font-family: var(--mono); color: var(--muted); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.06em; }
-  .stat-val { font-size: 17px; font-weight: 800; font-family: var(--mono); color: var(--text); }
-  .stat-val.pos { color: var(--green); }
-  .stat-val.neg { color: var(--red); }
-
-  /* Next bet box */
-  .next-bet {
-    background: var(--accent-dim); border: 1px solid var(--accent);
-    border-radius: var(--radius); padding: 18px 16px; margin-bottom: 12px;
-    animation: pulse-border 2s ease-in-out infinite;
-  }
-  @keyframes pulse-border {
-    0%, 100% { border-color: var(--accent); }
-    50% { border-color: rgba(200,240,78,0.4); }
-  }
-  .next-label { font-size: 10px; font-family: var(--mono); color: var(--accent); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 6px; }
-  .next-amount { font-size: 42px; font-weight: 800; font-family: var(--mono); color: var(--accent); line-height: 1; margin-bottom: 6px; }
-  .next-sub { font-size: 11px; font-family: var(--mono); color: rgba(200,240,78,0.6); }
-
-  /* History */
-  .round-row {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 11px 14px; border-radius: var(--radius-sm);
-    margin-bottom: 6px; border: 1px solid var(--border);
-    background: var(--surface);
-  }
-  .round-row.win { border-color: rgba(78,255,160,0.2); background: rgba(78,255,160,0.05); }
-  .round-row.loss { border-color: rgba(255,90,90,0.2); background: rgba(255,90,90,0.05); }
-  .round-n { font-size: 11px; font-family: var(--mono); color: var(--muted); min-width: 26px; }
-  .round-ulog { font-size: 14px; font-weight: 600; font-family: var(--mono); flex: 1; padding: 0 8px; }
-  .round-res { font-size: 12px; font-family: var(--mono); }
-  .round-res.win { color: var(--green); }
-  .round-res.loss { color: var(--red); }
-  .round-banka { font-size: 12px; font-family: var(--mono); color: var(--muted); text-align: right; min-width: 70px; }
-
-  /* Empty state */
-  .empty { text-align: center; padding: 48px 20px; color: var(--muted); font-family: var(--mono); font-size: 13px; }
-  .empty-icon { font-size: 40px; margin-bottom: 12px; }
-
-  /* Session not started */
-  .no-session { text-align: center; padding: 60px 20px; }
-  .no-session .icon { font-size: 48px; margin-bottom: 16px; }
-  .no-session p { color: var(--muted); font-size: 14px; line-height: 1.6; }
-
-  /* Toast */
-  .toast {
-    position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%) translateY(20px);
-    background: var(--surface2); border: 1px solid var(--border2);
-    border-radius: 99px; padding: 10px 20px;
-    font-size: 13px; font-family: var(--mono); color: var(--text);
-    opacity: 0; transition: all 0.25s; pointer-events: none; z-index: 100; white-space: nowrap;
-  }
-  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-
-  /* Separator */
-  .sep { height: 1px; background: var(--border); margin: 14px 0; }
-
-  /* Undo btn */
-  .undo-btn {
-    width: 100%; padding: 10px; font-size: 13px; font-family: var(--mono);
-    background: transparent; border: 1px dashed var(--border2);
-    border-radius: var(--radius-sm); color: var(--muted); cursor: pointer; margin-top: 6px;
-    transition: all 0.15s;
-  }
-  .undo-btn:active { color: var(--text); border-color: var(--border2); background: var(--surface2); }
-
-  /* Scrollbar */
-  .content::-webkit-scrollbar { width: 0; }
-</style>
+  <style>
+    /* Custom Scrollbar for premium dark feel */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #020617;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #1e293b;
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #10b981;
+    }
+  </style>
 </head>
-<body>
-<div class="app">
-  <div class="header">
-    <div class="header-title">Bet<span>Calc</span></div>
-    <div class="header-tag" id="session-tag">nema sesije</div>
-  </div>
+<body class="bg-slate-950 text-slate-100 font-sans selection:bg-emerald-500 selection:text-slate-950">
 
-  <div class="tabnav">
-    <button class="tab active" onclick="showTab('setup')">Postavke</button>
-    <button class="tab" onclick="showTab('play')">Igra</button>
-    <button class="tab" onclick="showTab('history')">Istorija</button>
-  </div>
+  <div id="root"></div>
 
-  <div class="content">
+  <!-- React JSX Code -->
+  <script type="text/babel">
+    const { useState, useEffect } = React;
 
-    <!-- SETUP TAB -->
-    <div class="page active" id="tab-setup">
-      <div class="card">
-        <div class="card-title">Banka & ulog</div>
-        <div class="field">
-          <label>Početna banka (RSD)</label>
-          <div class="field-row">
-            <input type="number" id="f-banka" value="1000" min="1" inputmode="decimal">
-          </div>
-        </div>
-        <div class="field">
-          <label>Početni ulog (RSD)</label>
-          <div class="field-row">
-            <input type="number" id="f-ulog" value="100" min="1" inputmode="decimal">
-          </div>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-title">Kvota & cilj</div>
-        <div class="field">
-          <label>Kvota</label>
-          <div class="field-row">
-            <input type="number" id="f-kvota" value="2.00" min="1.05" step="0.05" inputmode="decimal">
-            <span class="unit">×</span>
-          </div>
-        </div>
-        <div class="field">
-          <label>Ciljni profit (RSD)</label>
-          <div class="field-row">
-            <input type="number" id="f-cilj" value="200" min="1" inputmode="decimal">
-          </div>
-        </div>
-      </div>
-      <button class="btn btn-primary" onclick="startSession()">Pokreni sesiju →</button>
-      <div style="height:8px"></div>
-      <button class="btn btn-ghost" onclick="resetAll()">Resetuj sve</button>
-    </div>
+    const SYSTEM_INSTRUCTION = `
+    You are a world-class football statistician and sports analyst. 
+    Your task is to search Google to find accurate, real-time Head-to-Head (H2H) statistics and recent match data for the two football teams specified by the user.
+    You MUST provide a structured JSON response about their head-to-head match history, recent form, specific "traditions" (betting streaks/trends like GG, Over 2.5, Under 2.5, 1X, first half draws, etc.), and a detailed AI analysis.
 
-    <!-- PLAY TAB -->
-    <div class="page" id="tab-play">
-      <div id="no-session-msg" class="no-session">
-        <div class="icon">🎯</div>
-        <p>Nema aktivne sesije.<br>Idi na <strong>Postavke</strong> i pokreni sesiju.</p>
-      </div>
-      <div id="play-content" style="display:none">
-        <div class="stats-grid">
-          <div class="stat-card">
-            <div class="stat-label">Banka</div>
-            <div class="stat-val" id="s-banka">—</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-label">Net P&L</div>
-            <div class="stat-val" id="s-pnl">—</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-label">Pobede</div>
-            <div class="stat-val pos" id="s-wins">0</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-label">Porazi</div>
-            <div class="stat-val neg" id="s-losses">0</div>
-          </div>
-        </div>
+    IMPORTANT INSTRUCTION FOR SEARCHING:
+    Look for the absolute latest matches between these two teams up to the current year 2026.
+    Verify active streaks (e.g., 'Team A has not lost to Team B in 5 matches', 'Over 2.5 goals in 4 of last 5 matches', 'Both Teams to Score (GG) in 80% of matches').
 
-        <div class="next-bet">
-          <div class="next-label">▶ sledeći ulog</div>
-          <div class="next-amount" id="next-amount">—</div>
-          <div class="next-sub" id="next-sub">—</div>
-        </div>
+    Your response must be a strict JSON object matching this schema:
+    {
+      "teamA": "Full name of Team A",
+      "teamB": "Full name of Team B",
+      "overallH2H": {
+        "teamAWins": number,
+        "teamBWins": number,
+        "draws": number,
+        "totalMatches": number
+      },
+      "recentMatches": [
+        {
+          "date": "YYYY-MM-DD or readable date",
+          "homeTeam": "Home Team Name",
+          "awayTeam": "Away Team Name",
+          "homeScore": number,
+          "awayScore": number,
+          "competition": "e.g., Premier League, Champions League, Superliga"
+        }
+      ],
+      "traditions": [
+        {
+          "title": "Short code/trend (e.g., 'GG', '3+', '0-2', '1X', 'I1-3 & II1-3')",
+          "description": "Explanation in selected language (e.g., 'Oba tima su postigla gol na 5 od poslednjih 6 susreta.')",
+          "probability": number (estimated percentage, e.g., 83),
+          "type": "goals" | "outcome" | "streak"
+        }
+      ],
+      "teamAForm": [
+        { "opponent": "Opponent Name", "result": "W" | "D" | "L", "score": "e.g., 2-1", "homeAway": "Home" | "Away" }
+      ],
+      "teamBForm": [
+        { "opponent": "Opponent Name", "result": "W" | "D" | "L", "score": "e.g., 1-1", "homeAway": "Home" | "Away" }
+      ],
+      "aiAnalysis": "Deep markdown-formatted summary of the matchup, key missing players, weather or stadium factors, style of play, and tactical summary.",
+      "predictedOutcome": {
+        "homeWinProb": number,
+        "drawProb": number,
+        "awayWinProb": number,
+        "reasoning": "Short betting recommendation/reasoning"
+      }
+    }
 
-        <div class="btn-row">
-          <button class="btn btn-win" onclick="recordResult('win')">✓ Pobeda</button>
-          <button class="btn btn-loss" onclick="recordResult('loss')">✗ Poraz</button>
-        </div>
-        <button class="undo-btn" onclick="undoLast()">↩ poništi poslednji unos</button>
-
-        <div class="sep"></div>
-        <div class="card" style="margin-bottom:0">
-          <div class="card-title">Parametri sesije</div>
-          <div style="display:flex; justify-content:space-between; font-size:13px; font-family:var(--mono); color:var(--muted); margin-bottom:6px">
-            <span>Kvota</span><span style="color:var(--text)" id="p-kvota">—</span>
-          </div>
-          <div style="display:flex; justify-content:space-between; font-size:13px; font-family:var(--mono); color:var(--muted); margin-bottom:6px">
-            <span>Početna banka</span><span style="color:var(--text)" id="p-banka">—</span>
-          </div>
-          <div style="display:flex; justify-content:space-between; font-size:13px; font-family:var(--mono); color:var(--muted)">
-            <span>Cilj profita</span><span style="color:var(--accent)" id="p-cilj">—</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- HISTORY TAB -->
-    <div class="page" id="tab-history">
-      <div id="history-empty" class="empty">
-        <div class="empty-icon">📋</div>
-        Još nema odigranih rundi.
-      </div>
-      <div id="history-list"></div>
-    </div>
-
-  </div>
-</div>
-
-<div class="toast" id="toast"></div>
-
-<script>
-let state = null;
-const SAVE_KEY = 'betcalc_state';
-
-function save() {
-  try { localStorage.setItem(SAVE_KEY, JSON.stringify(state)); } catch(e) {}
-}
-
-function load() {
-  try {
-    const s = localStorage.getItem(SAVE_KEY);
-    if (s) state = JSON.parse(s);
-  } catch(e) {}
-}
-
-function fmt(n) { return Math.round(n).toLocaleString('sr-RS'); }
-function fmtDec(n) { return parseFloat(n.toFixed(2)).toLocaleString('sr-RS', {minimumFractionDigits: 2}); }
-
-function calcNextUlog(s) {
-  if (s.akumGubitak <= 0) return s.pocetniUlog;
-  const needed = s.akumGubitak + s.cilj;
-  return Math.ceil(needed / (s.kvota - 1));
-}
-
-function startSession() {
-  const banka = parseFloat(document.getElementById('f-banka').value);
-  const ulog = parseFloat(document.getElementById('f-ulog').value);
-  const kvota = parseFloat(document.getElementById('f-kvota').value);
-  const cilj = parseFloat(document.getElementById('f-cilj').value);
-  if (!banka || !ulog || !kvota || kvota <= 1 || !cilj) {
-    toast('Proveri unete vrednosti!'); return;
-  }
-  state = {
-    pocetnaBanka: banka, banka, pocetniUlog: ulog,
-    kvota, cilj, rounds: [], wins: 0, losses: 0,
-    akumGubitak: 0, nextUlog: ulog, started: Date.now()
-  };
-  save();
-  toast('Sesija pokrenuta!');
-  render();
-  showTab('play');
-}
-
-function recordResult(tip) {
-  if (!state) return;
-  const ulog = state.nextUlog;
-  const snap = JSON.stringify(state);
-
-  if (tip === 'win') {
-    const dobit = ulog * state.kvota;
-    const net = dobit - ulog;
-    state.banka = parseFloat((state.banka - ulog + dobit).toFixed(2));
-    state.akumGubitak = 0;
-    state.wins++;
-    state.nextUlog = state.pocetniUlog;
-    state.rounds.push({ n: state.rounds.length + 1, ulog, tip: 'win', banka: state.banka, net: parseFloat(net.toFixed(2)) });
-    toast(`+${fmt(net)} RSD 🎉`);
-  } else {
-    state.banka = parseFloat((state.banka - ulog).toFixed(2));
-    state.akumGubitak = parseFloat((state.akumGubitak + ulog).toFixed(2));
-    state.losses++;
-    state.rounds.push({ n: state.rounds.length + 1, ulog, tip: 'loss', banka: state.banka, net: -ulog });
-    state.nextUlog = calcNextUlog(state);
-    toast(`−${fmt(ulog)} RSD`);
-  }
-
-  state._lastSnap = snap;
-  save();
-  render();
-}
-
-function undoLast() {
-  if (!state || !state._lastSnap) { toast('Nema šta da se poništi'); return; }
-  state = JSON.parse(state._lastSnap);
-  state._lastSnap = null;
-  save();
-  render();
-  toast('Poslednji unos poništen');
-}
-
-function resetAll() {
-  if (state && state.rounds && state.rounds.length > 0) {
-    if (!confirm('Obrisati trenutnu sesiju?')) return;
-  }
-  state = null;
-  try { localStorage.removeItem(SAVE_KEY); } catch(e) {}
-  render();
-  toast('Resetovano');
-  showTab('setup');
-}
-
-function render() {
-  const hasSession = !!state;
-  document.getElementById('session-tag').textContent = hasSession ? `runda ${state.rounds.length}` : 'nema sesije';
-
-  document.getElementById('no-session-msg').style.display = hasSession ? 'none' : '';
-  document.getElementById('play-content').style.display = hasSession ? '' : 'none';
-
-  if (!hasSession) { renderHistory(); return; }
-
-  const pnl = state.banka - state.pocetnaBanka;
-  document.getElementById('s-banka').textContent = fmt(state.banka) + ' RSD';
-  const pnlEl = document.getElementById('s-pnl');
-  pnlEl.textContent = (pnl >= 0 ? '+' : '') + fmt(pnl) + ' RSD';
-  pnlEl.className = 'stat-val ' + (pnl >= 0 ? 'pos' : 'neg');
-  document.getElementById('s-wins').textContent = state.wins;
-  document.getElementById('s-losses').textContent = state.losses;
-
-  document.getElementById('next-amount').textContent = fmt(state.nextUlog) + ' RSD';
-  if (state.akumGubitak > 0) {
-    document.getElementById('next-sub').textContent =
-      `pokriva ${fmt(state.akumGubitak)} RSD gubitka + ${fmt(state.cilj)} RSD cilj`;
-  } else {
-    document.getElementById('next-sub').textContent = 'početni ulog — nema akumuliranog gubitka';
-  }
-
-  document.getElementById('p-kvota').textContent = fmtDec(state.kvota) + '×';
-  document.getElementById('p-banka').textContent = fmt(state.pocetnaBanka) + ' RSD';
-  document.getElementById('p-cilj').textContent = fmt(state.cilj) + ' RSD';
-
-  renderHistory();
-}
-
-function renderHistory() {
-  const list = document.getElementById('history-list');
-  const empty = document.getElementById('history-empty');
-  if (!state || state.rounds.length === 0) {
-    list.innerHTML = ''; empty.style.display = ''; return;
-  }
-  empty.style.display = 'none';
-  list.innerHTML = '';
-  const reversed = [...state.rounds].reverse();
-  reversed.forEach(r => {
-    const div = document.createElement('div');
-    div.className = 'round-row ' + r.tip;
-    div.innerHTML = `
-      <span class="round-n">#${r.n}</span>
-      <span class="round-ulog">${fmt(r.ulog)} RSD</span>
-      <span class="round-res ${r.tip}">${r.tip === 'win' ? '✓ +' + fmt(r.net) : '✗ −' + fmt(Math.abs(r.net))} RSD</span>
-      <span class="round-banka">${fmt(r.banka)} RSD</span>
+    Respond ONLY with this raw JSON structure. Do not wrap it in markdown codeblocks like \`\`\`json. Translate descriptions and analysis to the requested language.
     `;
-    list.appendChild(div);
-  });
-}
 
-function showTab(id) {
-  document.querySelectorAll('.tab').forEach((t, i) => {
-    const ids = ['setup', 'play', 'history'];
-    t.classList.toggle('active', ids[i] === id);
-  });
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.getElementById('tab-' + id).classList.add('active');
-}
+    const POPULAR_MATCHES = [
+      { teamA: "Real Madrid", teamB: "Barcelona", label: "El Clásico 🇪🇸" },
+      { teamA: "Manchester City", teamB: "Arsenal", label: "Premier League Derby 🏴󠁧󠁢󠁥󠁮󠁧󠁿" },
+      { teamA: "Crvena Zvezda", teamB: "Partizan", label: "Večiti Derbi 🇷🇸" },
+      { teamA: "Liverpool", teamB: "Chelsea", label: "English Giant Clash 🏴󠁧󠁢󠁥󠁮󠁧󠁿" },
+      { teamA: "Bayern Munich", teamB: "Borussia Dortmund", label: "Der Klassiker 🇩🇪" },
+      { teamA: "Inter Milan", teamB: "AC Milan", label: "Derby della Madonnina 🇮🇹" }
+    ];
 
-let toastTimer;
-function toast(msg) {
-  const el = document.getElementById('toast');
-  el.textContent = msg; el.classList.add('show');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
-}
+    function H2HAnalyzer() {
+      const [teamA, setTeamA] = useState("Crvena Zvezda");
+      const [teamB, setTeamB] = useState("Partizan");
+      const [language, setLanguage] = useState("SRB"); // SRB or ENG
+      const [loading, setLoading] = useState(false);
+      const [loadingStep, setLoadingStep] = useState(0);
+      const [error, setError] = useState(null);
+      const [h2hData, setH2hData] = useState(null);
+      const [sources, setSources] = useState([]);
+      const [customApiKey, setCustomApiKey] = useState("");
+      const [showApiSettings, setShowApiSettings] = useState(false);
 
-// Init
-load();
-render();
+      useEffect(() => {
+        let interval;
+        if (loading) {
+          interval = setInterval(() => {
+            setLoadingStep((prev) => (prev + 1) % 4);
+          }, 3500);
+        } else {
+          setLoadingStep(0);
+        }
+        return () => clearInterval(interval);
+      }, [loading]);
 
-// Service Worker
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('./sw.js').catch(() => {});
-}
-</script>
+      const loadingMessages = {
+        SRB: [
+          "Pokrećem pretragu i sakupljam podatke sa sportskih portala...",
+          "Analiziram međusobnu istoriju (H2H) i pronalazim serije rezultata...",
+          "Računam statističke verovatnoće za golove (GG, 3+, itd.)...",
+          "Formulišem AI predikciju i sastavljam konačan taktički izveštaj..."
+        ],
+        ENG: [
+          "Initiating search and gathering data from sports databases...",
+          "Analyzing head-to-head (H2H) history and detecting streaks...",
+          "Calculating statistical probabilities for goals (BTTS, Over 2.5)...",
+          "Formulating AI prediction and assembling tactical dashboard..."
+        ]
+      };
+
+      const fetchH2HAnalysis = async (tA = teamA, tB = teamB) => {
+        if (!tA.trim() || !tB.trim()) {
+          setError(language === "SRB" ? "Molimo unesite oba tima." : "Please enter both teams.");
+          return;
+        }
+
+        setLoading(true);
+        setError(null);
+        setH2hData(null);
+        setSources([]);
+
+        const fetchWithRetry = async (url, options, retries = 3, delay = 1000) => {
+          try {
+            const response = await fetch(url, options);
+            if (!response.ok) {
+              if (response.status === 429 && retries > 0) {
+                await new Promise(res => setTimeout(res, delay));
+                return fetchWithRetry(url, options, retries - 1, delay * 2);
+              }
+              throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response;
+          } catch (err) {
+            if (retries > 0) {
+              await new Promise(res => setTimeout(res, delay));
+              return fetchWithRetry(url, options, retries - 1, delay * 2);
+            }
+            throw err;
+          }
+        };
+
+        const langInstructions = language === "SRB" 
+          ? "Molim te uradi analizu na srpskom jeziku. Prevedi opise tradicija i AI analizu na srpski." 
+          : "Please perform the analysis in English.";
+        
+        const userQuery = `Search for H2H soccer/football statistics between team "${tA}" and team "${tB}". ${langInstructions}`;
+        
+        const activeApiKey = customApiKey || "";
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${activeApiKey}`;
+
+        const payload = {
+          contents: [{ parts: [{ text: userQuery }] }],
+          tools: [{ "google_search": {} }],
+          systemInstruction: {
+            parts: [{ text: SYSTEM_INSTRUCTION }]
+          },
+          generationConfig: {
+            responseMimeType: "application/json"
+          }
+        };
+
+        try {
+          const response = await fetchWithRetry(apiUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+          });
+
+          const result = await response.json();
+          const candidate = result.candidates?.[0];
+
+          if (candidate && candidate.content?.parts?.[0]?.text) {
+            let rawText = candidate.content.parts[0].text;
+            
+            if (rawText.startsWith("```json")) {
+              rawText = rawText.replace(/```json/g, "").replace(/```/g, "").trim();
+            } else if (rawText.startsWith("```")) {
+              rawText = rawText.replace(/```/g, "").trim();
+            }
+
+            const parsedData = JSON.parse(rawText);
+            setH2hData(parsedData);
+
+            const groundingMetadata = candidate.groundingMetadata;
+            if (groundingMetadata && groundingMetadata.groundingAttributions) {
+              const extractedSources = groundingMetadata.groundingAttributions
+                .map(attr => ({
+                  uri: attr.web?.uri,
+                  title: attr.web?.title,
+                }))
+                .filter(source => source.uri && source.title);
+              setSources(extractedSources);
+            }
+          } else {
+            throw new Error("Neispravan odgovor sa servera.");
+          }
+        } catch (err) {
+          console.error(err);
+          setError(
+            language === "SRB" 
+              ? "Došlo je do greške prilikom pretrage. Proverite nazive timova ili proverite svoj API ključ." 
+              : "An error occurred during search. Please verify team names or check your API key."
+          );
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      const handleQuickMatchClick = (m) => {
+        setTeamA(m.teamA);
+        setTeamB(m.teamB);
+        fetchH2HAnalysis(m.teamA, m.teamB);
+      };
+
+      return (
+        <div className="min-h-screen p-4 md:p-8">
+          
+          {/* HEADER */}
+          <header className="max-w-6xl mx-auto mb-8 flex flex-col md:flex-row md:justify-between md:items-center gap-4 border-b border-slate-900 pb-6">
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="bg-emerald-500 text-slate-950 font-black text-xs px-2 py-1 rounded">PRO</span>
+                <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
+                  H2H TRADITION ANALYZER
+                </h1>
+              </div>
+              <p className="text-xs md:text-sm text-slate-400">
+                {language === "SRB" 
+                  ? "Pametna AI pretraga, analiza formi i tradicija u realnom vremenu" 
+                  : "Smart AI Search, Form Analysis & Live Betting Trend Detection"}
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              <button 
+                onClick={() => setLanguage(l => l === "SRB" ? "ENG" : "SRB")}
+                className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-900 border border-slate-800 hover:border-slate-700 transition-colors"
+              >
+                🌐 {language === "SRB" ? "Srpski (SRB)" : "English (ENG)"}
+              </button>
+
+              <button
+                onClick={() => setShowApiSettings(!showApiSettings)}
+                className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-900 border border-slate-800 hover:border-slate-700 transition-colors"
+              >
+                ⚙️ {language === "SRB" ? "API Podešavanja" : "API Settings"}
+              </button>
+            </div>
+          </header>
+
+          {/* API ACCORDION */}
+          {showApiSettings && (
+            <div className="max-w-4xl mx-auto mb-8 p-4 bg-slate-900 rounded-xl border border-slate-800 text-sm">
+              <h3 className="font-bold mb-2 text-emerald-400">
+                {language === "SRB" ? "Konfiguracija Gemini API ključa" : "Gemini API Key Configuration"}
+              </h3>
+              <p className="text-xs text-slate-400 mb-4">
+                {language === "SRB" 
+                  ? "Unesite svoj besplatni Gemini API ključ sa Google AI Studio-a kako biste pokrenuli analitiku."
+                  : "Please enter your free Gemini API key from Google AI Studio to run analytics."}
+              </p>
+              <div className="flex gap-2">
+                <input 
+                  type="password"
+                  placeholder="AIzaSy..."
+                  value={customApiKey}
+                  onChange={(e) => setCustomApiKey(e.target.value)}
+                  className="flex-1 bg-slate-950 text-slate-100 border border-slate-800 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-emerald-500"
+                />
+              </div>
+            </div>
+          )}
+
+          {/* MAIN GRID */}
+          <main className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
+            
+            {/* INPUT SIDE */}
+            <div className="lg:col-span-4 flex flex-col gap-6">
+              
+              <div className="p-6 bg-slate-900 rounded-2xl border border-slate-800 shadow-xl">
+                <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
+                  🔍 {language === "SRB" ? "Pokreni Novu Analizu" : "Start New Analysis"}
+                </h2>
+                
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">
+                      {language === "SRB" ? "Domaćin (Tim A)" : "Home Team (Team A)"}
+                    </label>
+                    <input 
+                      type="text"
+                      placeholder="npr. Crvena Zvezda, Real Madrid..."
+                      value={teamA}
+                      onChange={(e) => setTeamA(e.target.value)}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-emerald-500 font-semibold"
+                    />
+                  </div>
+
+                  <div className="flex justify-center -my-2">
+                    <button 
+                      onClick={() => {
+                        const temp = teamA;
+                        setTeamA(teamB);
+                        setTeamB(temp);
+                      }}
+                      className="p-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-xs"
+                    >
+                      🔄
+                    </button>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">
+                      {language === "SRB" ? "Gost (Tim B)" : "Away Team (Team B)"}
+                    </label>
+                    <input 
+                      type="text"
+                      placeholder="npr. Partizan, Barcelona..."
+                      value={teamB}
+                      onChange={(e) => setTeamB(e.target.value)}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-emerald-500 font-semibold"
+                    />
+                  </div>
+
+                  <button
+                    onClick={() => fetchH2HAnalysis()}
+                    disabled={loading}
+                    className="w-full py-3 rounded-xl font-bold text-sm text-slate-950 bg-gradient-to-r from-emerald-400 to-cyan-500 hover:from-emerald-300 hover:to-cyan-400 transition-all shadow-lg flex justify-center items-center gap-2 disabled:bg-slate-800 disabled:text-slate-500"
+                  >
+                    {loading ? "Analiziram..." : `⚽ ${language === "SRB" ? "Izvuci H2H Tradicije" : "Extract H2H Trends"}`}
+                  </button>
+                </div>
+              </div>
+
+              {/* POPULAR MATCHES */}
+              <div className="p-6 bg-slate-900 rounded-2xl border border-slate-800 shadow-xl">
+                <h3 className="text-xs font-bold uppercase tracking-widest text-emerald-400 mb-3">
+                  🔥 {language === "SRB" ? "Popularni Derbiji" : "Popular Derbies"}
+                </h3>
+                <div className="grid grid-cols-1 gap-2">
+                  {POPULAR_MATCHES.map((m, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => handleQuickMatchClick(m)}
+                      disabled={loading}
+                      className="p-3 text-left bg-slate-950 hover:bg-slate-800 border border-slate-900 hover:border-slate-700 rounded-xl transition-all flex flex-col gap-1"
+                    >
+                      <span className="text-xs font-semibold text-slate-300">
+                        {m.teamA} vs {m.teamB}
+                      </span>
+                      <span className="text-[10px] text-slate-500">{m.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* RESULTS SIDE */}
+            <div className="lg:col-span-8">
+              
+              {error && (
+                <div className="p-4 mb-6 bg-rose-950/40 border border-rose-800 text-rose-200 rounded-xl">
+                  <p className="text-xs">{error}</p>
+                </div>
+              )}
+
+              {loading && (
+                <div className="p-12 bg-slate-900 rounded-2xl border border-slate-800 text-center flex flex-col items-center justify-center min-h-[450px]">
+                  <div className="w-16 h-16 rounded-full border-4 border-slate-800 border-t-emerald-500 animate-spin mb-4"></div>
+                  <h3 className="text-lg font-bold text-slate-200 mb-1">
+                    {language === "SRB" ? "Sastavljam Izveštaj..." : "Generating Report..."}
+                  </h3>
+                  <p className="text-xs text-emerald-400 animate-pulse">
+                    {loadingMessages[language][loadingStep]}
+                  </p>
+                </div>
+              )}
+
+              {!loading && !h2hData && (
+                <div className="p-12 bg-slate-900/60 rounded-2xl border border-slate-800 border-dashed text-center flex flex-col items-center justify-center min-h-[450px]">
+                  <span className="text-4xl mb-3">📈</span>
+                  <h3 className="text-lg font-bold text-slate-300 mb-1">
+                    {language === "SRB" ? "Spremni za analizu?" : "Ready for H2H Trends?"}
+                  </h3>
+                  <p className="text-xs text-slate-500 max-w-sm">
+                    {language === "SRB" 
+                      ? "Unesite timove sa leve strane ili kliknite na neki od ponuđenih derbija kako bismo uradili pretragu uživo."
+                      : "Enter teams or select a popular derby to gather direct statistics."}
+                  </p>
+                </div>
+              )}
+
+              {!loading && h2hData && (
+                <div className="space-y-6">
+                  
+                  {/* HERO SCOREBOARD */}
+                  <div className="p-6 bg-slate-900 rounded-2xl border border-slate-800 shadow-2xl">
+                    <div className="flex justify-between items-center mb-6 border-b border-slate-800/60 pb-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                      <span>🏆 HEAD-TO-HEAD</span>
+                      <span>Real-time Data</span>
+                    </div>
+
+                    <div className="flex justify-around items-center gap-4 py-2">
+                      <div className="text-center flex-1">
+                        <div className="w-12 h-12 rounded-full bg-slate-950 border border-slate-800 flex items-center justify-center text-lg font-black text-emerald-400 mx-auto mb-2">
+                          {h2hData.teamA ? h2hData.teamA.charAt(0) : "A"}
+                        </div>
+                        <h3 className="text-sm font-bold">{h2hData.teamA}</h3>
+                      </div>
+
+                      <div className="text-center">
+                        <div className="text-xl font-black text-emerald-500">{h2hData.overallH2H?.totalMatches || 0}</div>
+                        <span className="text-[9px] uppercase font-bold text-slate-500">Mečeva</span>
+                      </div>
+
+                      <div className="text-center flex-1">
+                        <div className="w-12 h-12 rounded-full bg-slate-950 border border-slate-800 flex items-center justify-center text-lg font-black text-cyan-400 mx-auto mb-2">
+                          {h2hData.teamB ? h2hData.teamB.charAt(0) : "B"}
+                        </div>
+                        <h3 className="text-sm font-bold">{h2hData.teamB}</h3>
+                      </div>
+                    </div>
+
+                    <div className="mt-6 p-4 bg-slate-950/60 rounded-xl flex justify-around text-center text-[11px] font-semibold text-slate-400">
+                      <div>
+                        Pobede {h2hData.teamA}: <span className="text-emerald-400 font-bold">{h2hData.overallH2H?.teamAWins || 0}</span>
+                      </div>
+                      <div className="border-l border-slate-800 px-4">
+                        Nerešeno: <span className="text-slate-300 font-bold">{h2hData.overallH2H?.draws || 0}</span>
+                      </div>
+                      <div className="border-l border-slate-800 px-4">
+                        Pobede {h2hData.teamB}: <span className="text-cyan-400 font-bold">{h2hData.overallH2H?.teamBWins || 0}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* TRADITIONS */}
+                  <div className="p-6 bg-slate-900 rounded-2xl border border-slate-800 shadow-xl">
+                    <h3 className="text-sm font-bold text-slate-200 mb-4 flex items-center gap-2">
+                      🔥 {language === "SRB" ? "ISTAKNUTE TRADICIJE" : "SPECIAL TRENDS & TRADITIONS"}
+                    </h3>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {h2hData.traditions && h2hData.traditions.map((trad, idx) => (
+                        <div key={idx} className="p-4 bg-slate-950 rounded-xl border border-slate-800 flex justify-between items-center gap-4">
+                          <div className="flex-1">
+                            <span className="inline-block px-1.5 py-0.5 bg-emerald-950 text-emerald-400 border border-emerald-900 rounded text-[9px] font-bold uppercase mb-2">
+                              {trad.title}
+                            </span>
+                            <p className="text-xs text-slate-300 leading-relaxed font-medium">
+                              {trad.description}
+                            </p>
+                          </div>
+                          
+                          <div className="text-center">
+                            <span className="block text-base font-black text-emerald-400">{trad.probability}%</span>
+                            <span className="text-[8px] text-slate-500 uppercase font-bold">Šansa</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* PREDICTOR BAR */}
+                  <div className="p-6 bg-slate-900 rounded-2xl border border-slate-800 shadow-xl">
+                    <h3 className="text-sm font-bold mb-4">🔮 {language === "SRB" ? "AI PROGNOZA ISHODA" : "AI PROBABILITY FORECAST"}</h3>
+                    <div className="w-full h-3.5 bg-slate-950 rounded-full overflow-hidden flex mb-4">
+                      <div className="bg-emerald-500 h-full" style={{ width: `${h2hData.predictedOutcome?.homeWinProb || 33}%` }}></div>
+                      <div className="bg-slate-500 h-full" style={{ width: `${h2hData.predictedOutcome?.drawProb || 34}%` }}></div>
+                      <div className="bg-cyan-500 h-full" style={{ width: `${h2hData.predictedOutcome?.awayWinProb || 33}%` }}></div>
+                    </div>
+                    <div className="grid grid-cols-3 text-center text-xs font-bold pt-1">
+                      <div>
+                        <span className="text-slate-400 text-[10px] block">{h2hData.teamA}</span>
+                        <span className="text-emerald-500 text-sm">{h2hData.predictedOutcome?.homeWinProb}%</span>
+                      </div>
+                      <div className="border-x border-slate-800">
+                        <span className="text-slate-400 text-[10px] block">Nerešeno</span>
+                        <span className="text-slate-300 text-sm">{h2hData.predictedOutcome?.drawProb}%</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-400 text-[10px] block">{h2hData.teamB}</span>
+                        <span className="text-cyan-500 text-sm">{h2hData.predictedOutcome?.awayWinProb}%</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* TACTICAL ANALYSIS */}
+                  <div className="p-6 bg-slate-900 rounded-2xl border border-slate-800 shadow-xl">
+                    <h3 className="text-sm font-bold text-emerald-400 mb-3">🧠 AI ANALITIČKI IZVEŠTAJ</h3>
+                    <p className="text-xs text-slate-300 leading-relaxed whitespace-pre-wrap">{h2hData.aiAnalysis}</p>
+                  </div>
+
+                  {/* SOURCES */}
+                  {sources.length > 0 && (
+                    <div className="p-4 bg-slate-950 border border-slate-900 rounded-xl text-[10px]">
+                      <span className="text-slate-500 block mb-2 font-bold uppercase">🔗 Izguglani izvori podataka:</span>
+                      <div className="flex flex-wrap gap-2">
+                        {sources.map((src, i) => (
+                          <a key={i} href={src.uri} target="_blank" rel="noreferrer" className="bg-slate-900 border border-slate-800 px-2 py-1 rounded text-slate-300 hover:text-emerald-400">
+                            {src.title || "Izvor"}
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                </div>
+              )}
+            </div>
+          </main>
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<H2HAnalyzer />);
+  </script>
 </body>
 </html>
