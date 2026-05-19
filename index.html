@@ -50,7 +50,7 @@
     Look for the absolute latest matches between these two teams up to the current year 2026.
     Verify active streaks (e.g., 'Team A has not lost to Team B in 5 matches', 'Over 2.5 goals in 4 of last 5 matches', 'Both Teams to Score (GG) in 80% of matches').
 
-    Your response must be a strict JSON object matching this schema:
+    Your response must be a strict JSON object matching this schema. Do not output any conversational text or explanations outside of the JSON block:
     {
       "teamA": "Full name of Team A",
       "teamB": "Full name of Team B",
@@ -227,7 +227,7 @@
         
         const userQuery = `Search for H2H soccer/football statistics between team "${tA}" and team "${tB}". ${langInstructions}`;
         
-        // UPGRADED TO THE STABLE PRODUCTION MODEL "gemini-2.5-flash"
+        // STABLE MODEL FOR WEB SEARCH GROUNDING
         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${activeApiKey}`;
 
         const payload = {
@@ -235,10 +235,8 @@
           tools: [{ "google_search": {} }],
           systemInstruction: {
             parts: [{ text: SYSTEM_INSTRUCTION }]
-          },
-          generationConfig: {
-            responseMimeType: "application/json"
           }
+          // Removed responseMimeType: "application/json" to prevent Conflict Error with Grounding Tool.
         };
 
         try {
@@ -252,12 +250,12 @@
           const candidate = result.candidates?.[0];
 
           if (candidate && candidate.content?.parts?.[0]?.text) {
-            let rawText = candidate.content.parts[0].text;
+            let rawText = candidate.content.parts[0].text.trim();
             
-            if (rawText.startsWith("```json")) {
-              rawText = rawText.replace(/```json/g, "").replace(/```/g, "").trim();
-            } else if (rawText.startsWith("```")) {
-              rawText = rawText.replace(/```/g, "").trim();
+            // Extract JSON block using Regex as fallback since we removed structural JSON setting
+            const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+            if (jsonMatch) {
+              rawText = jsonMatch[0];
             }
 
             const parsedData = JSON.parse(rawText);
@@ -345,7 +343,7 @@
                 {language === "SRB" 
                   ? "Za pokretanje pretrage potreban ti je sopstveni besplatni API ključ. Možeš ga kreirati za 1 minut na sajtu "
                   : "To run live searches, you need a personal API key. You can create one for free in 1 minute at "}
-                <a href="[https://aistudio.google.com/](https://aistudio.google.com/)" target="_blank" rel="noreferrer" className="text-emerald-400 underline font-semibold hover:text-emerald-300">
+                <a href="https://aistudio.google.com/" target="_blank" rel="noreferrer" className="text-emerald-400 underline font-semibold hover:text-emerald-300">
                   Google AI Studio
                 </a>.
               </p>
