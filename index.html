@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>H2H Football Tradition Analyzer</title>
+  <title>H2h football tradition analyzer</title>
   
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -202,11 +202,14 @@
           try {
             const response = await fetch(url, options);
             if (!response.ok) {
+              const errBody = await response.json().catch(() => ({}));
+              const errMsg = errBody.error?.message || `HTTP error! status: ${response.status}`;
+              
               if (response.status === 429 && retries > 0) {
                 await new Promise(res => setTimeout(res, delay));
                 return fetchWithRetry(url, options, retries - 1, delay * 2);
               }
-              throw new Error(`HTTP error! status: ${response.status}`);
+              throw new Error(errMsg);
             }
             return response;
           } catch (err) {
@@ -223,7 +226,9 @@
           : "Please perform the analysis in English.";
         
         const userQuery = `Search for H2H soccer/football statistics between team "${tA}" and team "${tB}". ${langInstructions}`;
-        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${activeApiKey}`;
+        
+        // UPGRADED TO THE STABLE PRODUCTION MODEL "gemini-2.5-flash"
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${activeApiKey}`;
 
         const payload = {
           contents: [{ parts: [{ text: userQuery }] }],
@@ -269,14 +274,14 @@
               setSources(extractedSources);
             }
           } else {
-            throw new Error("Neispravan odgovor sa servera.");
+            throw new Error("Nepravilan ili prazan odgovor od AI modela.");
           }
         } catch (err) {
           console.error(err);
           setError(
             language === "SRB" 
-              ? "Greška! Proverite da li je vaš API ključ ispravan, ili pokušajte ponovo." 
-              : "Error! Please make sure your API key is correct, or try again."
+              ? `Greška pri pretrazi: ${err.message}. Proverite da li je vaš API ključ ispravno unet i da li ste ga sačuvali.`
+              : `Search error: ${err.message}. Please check if your API key is correctly entered and saved.`
           );
         } finally {
           setLoading(false);
@@ -474,7 +479,7 @@
               
               {error && (
                 <div className="p-4 mb-6 bg-rose-950/40 border border-rose-800 text-rose-200 rounded-xl">
-                  <p className="text-xs">{error}</p>
+                  <p className="text-xs font-mono">{error}</p>
                 </div>
               )}
 
